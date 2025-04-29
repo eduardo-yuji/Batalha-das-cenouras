@@ -1,6 +1,6 @@
 # Batalha das Cenouras
 
-Projeto realizado para a matéria de **Oficina de Integração**.
+Projeto realizado para a matéria de **Oficina de Integração 1**.
 
 > ⚠️ Este projeto encontra-se apenas em seu estágio inicial de desenvolvimento. Algumas funcionalidades podem estar incompletas ou planejadas para versões futuras.
 
