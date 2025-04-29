@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Batalha das Cenouras</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <style>
+      body {
+        margin: 0;
+        background-color: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      #game-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      canvas {
+        max-width: 100%;
+        max-height: 100vh;
+        object-fit: contain;
+      }
+
+
+      .developers a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+
+  <body>
+    <script>
+      class HealthBar {
+        constructor(scene, x, y) {
+          this.bar = new Phaser.GameObjects.Graphics(scene);
+          this.x = x;
+          this.y = y;
+          this.value = 100;
+          this.p = 76 / 100;
+          this.draw();
+          scene.add.existing(this.bar);
+        }
+
+        decrease(amount) {
+          console.log("d", this.value);
+          this.value -= amount;
+          if (this.value < 0) {
+            this.value = 0;
+          }
+          this.draw();
+          return this.value === 0;
+        }
+
+        draw() {
+          this.bar.clear();
+          this.bar.fillStyle(0x000000);
+          this.bar.fillRect(this.x, this.y, 80, 16);
+          this.bar.fillStyle(0xffffff);
+          this.bar.fillRect(this.x + 2, this.y + 2, 76, 12);
+
+          if (this.value < 30) {
+            this.bar.fillStyle(0xff0000);
+          } else {
+            this.bar.fillStyle(0x00ff00);
+          }
+
+          var d = Math.floor(this.p * this.value);
+          this.bar.fillRect(this.x + 2, this.y + 2, d, 12);
+        }
+      }
+
+      class Menu extends Phaser.Scene {
+        constructor() {
+          super({ key: "Menu" });
+        }
+
+        preload() {
+          this.load.audio(
+            "backgroundMusic1",
+            "assets/music/Grupo_C/music1.mp3"
+          ); // Carregar a música
+          this.load.audio(
+            "backgroundMusic2",
+            "assets/music/Grupo_C/music2.mp3"
+          ); // Carregar a música
+          this.load.audio(
+            "backgroundMusic3",
+            "assets/music/Grupo_C/music3.mp3"
+          ); // Carregar a música
+          this.load.audio(
+            "backgroundMusic4",
+            "assets/music/Grupo_C/music4.mp3"
+          ); // Carregar a música
+          this.load.audio(
+            "backgroundMusic5",
+            "assets/music/Grupo_C/music5.mp3"
+          ); // Carregar a música
+          this.load.image("backgroundImage", "assets/others/Grupo_C/menu.png");
+          this.load.image(
+            "startButton",
+            "assets/others/Grupo_C/botao_menu.jpg"
+          );
+        }
+
+        create() {
+          // Adicionar fundo à cena
+          this.add.image(640, 480, "backgroundImage").setDisplaySize(1280, 960); // Definindo o fundo para preencher a tela
+
+          // Criar o botão, definir tamanho e centralizá-lo
+          const startButton = this.add
+            .image(640, 540, "startButton")
+            .setDisplaySize(300, 100) // Redefine o tamanho do botão (largura: 200px, altura: 100px)
+            .setInteractive(); // Torna o botão interativo
+
+          startButton.on("pointerdown", () => {
+            this.scene.start("Movimentos");
+            this.scene.stop("Menu"); // Garantir que a cena de menu seja parada
+          });
+
+          // Adiciona animação no botão
+          startButton.on("pointerover", () => {
+            startButton.setScale(1.1); // Aumenta o tamanho ao passar o mouse
+          });
+
+          startButton.on("pointerout", () => {
+            startButton.setScale(1); // Restaura o tamanho original
+          });
+
+          // Tocar a música de fundo
+          const random = Math.floor(Math.random() * 5) + 1; // Número aleatório entre 1
+          if (random === 1) {
+            this.music = this.sound.add("backgroundMusic1");
+            this.music.setLoop(true); // Loop infinito
+            this.music.play();
+          } else if (random === 2) {
+            this.music = this.sound.add("backgroundMusic2");
+            this.music.setLoop(true); // Loop infinito
+            this.music.play();
+          } else if (random === 3) {
+            this.music = this.sound.add("backgroundMusic3");
+            this.music.setLoop(true); // Loop infinito
+            this.music.play();
+          } else if (random === 4) {
+            this.music = this.sound.add("backgroundMusic4");
+            this.music.setLoop(true); // Loop infinito
+            this.music.play();
+          } else {
+            this.music = this.sound.add("backgroundMusic5");
+            this.music.setLoop(true); // Loop infinito
+            this.music.play();
+          }
+
+          // Adicionar texto dos desenvolvedores ao menu
+          const developerText = this.add.text(
+            512, // Posição X
+            120, // Posição Y
+            "Desenvolvedores:\nEduardo Yuji Yoshida Yamada\nSéfora Davanso de Assis",
+            {
+              fontFamily: "Verdana",
+              fontSize: "16px",
+              color: "#783d2c",
+              fontStyle: "bold",
+              align: "center",
+            }
+          );
+
+          // Tornar os nomes clicáveis
+          developerText.setInteractive({ useHandCursor: true });
+          developerText.on("pointerdown", (pointer, localX, localY) => {
+            if (localY > 16 && localY < 32) {
+              window.open("https://github.com/eduardo-yuji", "_blank");
+            } else if (localY > 32) {
+              window.open("https://github.com/sefora-davanso", "_blank");
+            }
+          });
+        }
+      }
+
+      class Movimentos extends Phaser.Scene {
+        constructor() {
+          super({ key: "Movimentos" });
+        }
+
+        preload() {
+          // Carregar imagens e recursos para a nova cena
+          this.load.image(
+            "backgroundImage2",
+            "assets/others/Grupo_C/movimentos.jpg"
+          ); // Nova imagem de fundo
+          this.load.image(
+            "nextButton",
+            "assets/others/Grupo_C/botao_movimentos.jpg"
+          ); // Novo botão
+        }
+
+        create() {
+          // Adicionar fundo da nova cena
+          this.add
+            .image(640, 480, "backgroundImage2")
+            .setDisplaySize(1280, 960); // Ajuste o fundo para a tela inteira
+
+          // Criar novo botão e centralizá-lo
+          const newButton = this.add
+            .image(1000, 890, "nextButton")
+            .setDisplaySize(300, 100) // Redefine o tamanho do novo botão
+            .setInteractive(); // Torna o botão interativo
+
+          newButton.on("pointerdown", () => {
+            this.scene.start("Guerra_de_Coelhos"); // Inicia a próxima cena ou ação desejada
+            this.scene.stop("Movimentos"); // Opcional: parar a cena atual
+          });
+
+          // Adiciona animação no novo botão
+          newButton.on("pointerover", () => {
+            newButton.setScale(1.1); // Aumenta o tamanho do botão ao passar o mouse
+          });
+
+          newButton.on("pointerout", () => {
+            newButton.setScale(1); // Restaura o tamanho original
+          });
+        }
+      }
+
+      class GameOver extends Phaser.Scene {
+        constructor() {
+          super({ key: "GameOver" });
+        }
+
+        init(data) {
+          this.winner = data.winner;
+        }
+
+        preload() {
+          this.load.image(
+            "gameOverBackground",
+            "assets/others/Grupo_C/gameover.png"
+          );
+          this.load.image(
+            "restartButton",
+            "assets/others/Grupo_C/botao_reiniciar.png"
+          );
+          this.load.audio("vitoriaSound", "assets/music/Grupo_C/Vitoria.mp3");
+        }
+
+        create() {
+          this.add
+            .image(640, 480, "gameOverBackground")
+            .setDisplaySize(1280, 960);
+          this.add
+            .text(640, 730, `${this.winner}!`, {
+              fontSize: "48px",
+              fill: "#ffffff",
+            })
+            .setOrigin(0.5); // Centraliza o texto na tela
+
+          // Criar novo botão e centralizá-lo
+          const restartButton = this.add
+            .image(1000, 900, "restartButton")
+            .setDisplaySize(300, 100) // Redefine o tamanho do novo botão
+            .setInteractive(); // Torna o botão interativo
+
+          restartButton.on("pointerdown", () => {
+            location.reload(); // Recarrega a página completamente
+          });
+
+          // Adiciona animação no novo botão
+          restartButton.on("pointerover", () => {
+            restartButton.setScale(1.1); // Aumenta o tamanho do botão ao passar o mouse
+          });
+
+          restartButton.on("pointerout", () => {
+            restartButton.setScale(1); // Restaura o tamanho original
+          });
+        }
+      }
+
+      class Guerra_de_Coelhos extends Phaser.Scene {
+        constructor() {
+          super({ key: "Guerra_de_Coelhos" });
+        }
+
+        preload() {
+          this.load.spritesheet(
+            "player1",
+            "assets/spritesheets/Grupo_C/BunnyWalk-Sheet.png",
+            { frameWidth: 32, frameHeight: 32 }
+          );
+          this.load.spritesheet(
+            "player2",
+            "assets/spritesheets/Grupo_C/BunnyIdleF.png",
+            { frameWidth: 32, frameHeight: 32 }
+          );
+          this.load.image(
+            "Tile_Asset_Png",
+            "assets/maps/Grupo_C/Tile_Asset_Png.png"
+          );
+          this.load.tilemapTiledJSON("themap", "assets/maps/Grupo_C/Mapa.json");
+          this.load.image("arrow", "assets/spritesheets/Grupo_C/image.png");
+          this.load.audio("hitSound", "assets/music/Grupo_C/hit.mp3"); // Carregar a música
+          this.load.audio("vitoriaSound", "assets/music/Grupo_C/Vitoria.mp3"); // Carregar a música
+        }
+
+        create() {
+          // Carregar o efeito sonoro
+          this.hitSound = this.sound.add("hitSound");
+          this.vitoriaSound = this.sound.add("vitoriaSound");
+
+          const map = this.make.tilemap({ key: "themap" });
+          const tileset = map.addTilesetImage("Tile_Asset_Png");
+          this.backgroundLayer = map.createStaticLayer("Back", tileset, 0, 0);
+          this.plataformaLayer = map.createStaticLayer(
+            "Plataforma",
+            tileset,
+            0,
+            0
+          );
+          this.plataformaLayer.setCollisionByExclusion([-1]);
+
+          this.player1 = this.physics.add
+            .sprite(100, 100, "player1", 0)
+            .setCollideWorldBounds(true);
+          this.player2 = this.physics.add
+            .sprite(1200, 100, "player2", 0)
+            .setCollideWorldBounds(true);
+
+          this.physics.add.collider(this.player1, this.plataformaLayer);
+          this.physics.add.collider(this.player2, this.plataformaLayer);
+
+          this.anims.create({
+            key: "left1",
+            frames: this.anims.generateFrameNumbers("player1", {
+              start: 0,
+              end: 3,
+            }),
+            frameRate: 10,
+            repeat: -1,
+          });
+          this.anims.create({
+            key: "right1",
+            frames: this.anims.generateFrameNumbers("player1", {
+              start: 0,
+              end: 3,
+            }),
+            frameRate: 10,
+            repeat: -1,
+          });
+          this.anims.create({
+            key: "idle1",
+            frames: [{ key: "player1", frame: 0 }],
+            frameRate: 10,
+          });
+
+          this.anims.create({
+            key: "left2",
+            frames: this.anims.generateFrameNumbers("player2", {
+              start: 0,
+              end: 3,
+            }),
+            frameRate: 10,
+            repeat: -1,
+          });
+          this.anims.create({
+            key: "right2",
+            frames: this.anims.generateFrameNumbers("player2", {
+              start: 0,
+              end: 3,
+            }),
+            frameRate: 10,
+            repeat: -1,
+          });
+          this.anims.create({
+            key: "idle2",
+            frames: [{ key: "player2", frame: 0 }],
+            frameRate: 10,
+          });
+
+          this.cursors1 = this.input.keyboard.addKeys("W,A,S,D,SPACE");
+          this.cursors2 = this.input.keyboard.addKeys(
+            "UP,LEFT,DOWN,RIGHT,ENTER"
+          );
+
+          this.healthBar1 = new HealthBar(this, 195, 10);
+          this.healthBar2 = new HealthBar(this, 1000, 10);
+
+          this.players = [
+            {
+              sprite: this.player1,
+              cursors: this.cursors1,
+              arrow: this.physics.add.image(-50, -50, "arrow").setScale(0.03),
+              animPrefix: "1",
+              shoot_angle: 0,
+              healthBar: this.healthBar1,
+            },
+            {
+              sprite: this.player2,
+              cursors: this.cursors2,
+              arrow: this.physics.add.image(-50, -50, "arrow").setScale(0.03),
+              animPrefix: "2",
+              shoot_angle: 0,
+              healthBar: this.healthBar2,
+            },
+          ];
+
+          this.players.forEach((player) => {
+            player.arrow.setCollideWorldBounds(true);
+            player.arrow.body.setAllowGravity(false);
+          });
+          console.log(this.players[0]);
+        }
+
+        update() {
+          this.players.forEach((player) => {
+            const { sprite, cursors, arrow, animPrefix, healthBar } = player;
+
+            if (cursors.A?.isDown || cursors.LEFT?.isDown) {
+              sprite.setVelocityX(-160);
+              sprite.anims.play("left" + animPrefix, true);
+              player.shoot_angle += 0.01;
+            } else if (cursors.D?.isDown || cursors.RIGHT?.isDown) {
+              sprite.setVelocityX(160);
+              sprite.anims.play("right" + animPrefix, true);
+              player.shoot_angle -= 0.01;
+            } else if (cursors.S?.isDown || cursors.DOWN?.isDown) {
+              sprite.setVelocityX(0);
+              sprite.setVelocityY(160);
+              //sprite.anims.play('idle' + animPrefix, true);
+            } else {
+              sprite.setVelocityX(0);
+              //sprite.anims.play('idle' + animPrefix, true);
+            }
+
+            if (
+              (cursors.W?.isDown || cursors.UP?.isDown) &&
+              sprite.body.blocked.down
+            ) {
+              sprite.setVelocityY(-330);
+            }
+
+            if (cursors.SPACE?.isDown || cursors.ENTER?.isDown) {
+              this.shootArrow(player);
+            }
+          });
+        }
+
+        shootArrow(player) {
+          const arrow = player.arrow;
+
+          arrow.setPosition(player.sprite.x, player.sprite.y);
+          arrow.setVisible(true);
+          arrow.setVelocityX(270 * Math.cos(player.shoot_angle * 2 * Math.PI));
+          arrow.setVelocityY(270 * Math.sin(player.shoot_angle * 2 * Math.PI));
+          arrow.setRotation(player.shoot_angle * 2 * Math.PI - 1.5 * Math.PI);
+          arrow.body.enable = true;
+
+          const opponent = this.players.find((p) => p !== player);
+          this.physics.add.overlap(arrow, opponent.sprite, () => {
+            arrow.body.enable = false;
+            //arrow.setPosition(0 ,0);
+            if (opponent.healthBar.decrease(25)) {
+              this.vitoriaSound.play();
+
+              // Para todas as músicas e sons ativos antes de mudar de cena
+              this.sound.stopAll();
+              this.scene.stop("Guerra_de_Coelhos");
+              this.scene.start("GameOver", {
+                winner: player === this.players[0] ? "Jogador 1" : "Jogador 2",
+              });
+            }
+            this.hitSound.play();
+            arrow.setVisible(false);
+            arrow.setPosition(-50, -50);
+          });
+        }
+      }
+
+      const config = {
+        type: Phaser.AUTO,
+        width: 1280,
+        height: 960,
+        backgroundColor: "#000000",
+        physics: {
+          default: "arcade",
+          arcade: { gravity: { y: 300 }, debug: false },
+        },
+        scene: [Menu, Guerra_de_Coelhos, Movimentos, GameOver],
+      };
+
+      const game = new Phaser.Game(config);
+    </script>
+  </body>
+</html>
